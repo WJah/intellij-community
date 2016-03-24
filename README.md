@@ -14,8 +14,8 @@ To develop IntelliJ IDEA, you can use either IntelliJ IDEA Community Edition or 
 
 You can find other useful information at [http://www.jetbrains.org](http://www.jetbrains.org). [Contribute section](http://www.jetbrains.org/display/IJOS/Contribute) of that site describes how you can contribute to IntelliJ IDEA.
 
--------------modified by Jiahe Wang--------------
+-------------modified by Jiahe Wang as below--------------
 * all work is done under branch 145
 * modify getPlugin.sh to get android plugins from git@github.com:WJah/android.git and git@github.com:WJah/adt-tool-base.git
 * modify intellij idea DeleteHandler.java to update R.java after delete layout xml file
-* other work is done under https://github.com/WJah/android and https://github.com/WJah/adt-tools-base.Read their README.md For detail 
+* other work is done under https://github.com/WJah/android and https://github.com/WJah/adt-tools-base. Read their README.md For detail 
