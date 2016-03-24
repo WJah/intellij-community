@@ -16,6 +16,7 @@
 
 package com.intellij.ide.util;
 
+import com.intel.moe.tool.RGenerator;
 import com.intellij.CommonBundle;
 import com.intellij.history.LocalHistory;
 import com.intellij.history.LocalHistoryAction;
@@ -36,6 +37,7 @@ import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.ui.ex.MessagesEx;
 import com.intellij.openapi.util.Ref;
+import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.VFileProperty;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.WritingAccessProvider;
@@ -57,6 +59,7 @@ import com.intellij.util.io.ReadOnlyAttributeUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -112,6 +115,23 @@ public class DeleteHandler {
 
   public static void deletePsiElement(final PsiElement[] elementsToDelete, final Project project) {
     deletePsiElement(elementsToDelete, project, true);
+    boolean hasFileDeleted = false;
+    for (PsiElement psiElement : elementsToDelete){
+      if (!psiElement.isValid()) {
+        PsiFile psiFile = psiElement.getContainingFile();
+        String fileName = psiFile.getName();
+        File file = new File(RGenerator.mProjectPath + "/tmp/" + fileName.substring(0, fileName.length() - 4) + ".java");
+        if (file.exists()) {
+          if (file.delete()){
+            hasFileDeleted = true;
+          }
+          file = null;
+        }
+      }
+    }
+    if (hasFileDeleted){
+      com.intel.moe.tool.FileUtil.mergeTmpFilesToR(RGenerator.mProjectPath);
+    }
   }
 
   public static void deletePsiElement(final PsiElement[] elementsToDelete, final Project project, boolean needConfirmation) {
@@ -156,8 +176,8 @@ public class DeleteHandler {
       }
     }
     else {
-      @SuppressWarnings({"UnresolvedPropertyKey"})
-      String warningMessage = DeleteUtil.generateWarningMessage(IdeBundle.message("prompt.delete.elements"), elements);
+      @SuppressWarnings({"UnresolvedPropertyKey"}) String warningMessage =
+        DeleteUtil.generateWarningMessage(IdeBundle.message("prompt.delete.elements"), elements);
 
       boolean anyDirectories = false;
       String directoryName = null;
@@ -184,9 +204,9 @@ public class DeleteHandler {
       }
 
       if (needConfirmation) {
-        int result = Messages.showOkCancelDialog(project, warningMessage, IdeBundle.message("title.delete"),
-                                                 ApplicationBundle.message("button.delete"), CommonBundle.getCancelButtonText(),
-                                                 Messages.getQuestionIcon());
+        int result = Messages
+          .showOkCancelDialog(project, warningMessage, IdeBundle.message("title.delete"), ApplicationBundle.message("button.delete"),
+                              CommonBundle.getCancelButtonText(), Messages.getQuestionIcon());
         if (result != Messages.OK) return;
       }
     }
@@ -237,10 +257,8 @@ public class DeleteHandler {
             if (file != null) {
               final VirtualFile virtualFile = file.getVirtualFile();
               if (virtualFile.isInLocalFileSystem()) {
-                int _result = MessagesEx.fileIsReadOnly(project, virtualFile)
-                  .setTitle(IdeBundle.message("title.delete"))
-                  .appendMessage(IdeBundle.message("prompt.delete.it.anyway"))
-                  .askYesNo();
+                int _result = MessagesEx.fileIsReadOnly(project, virtualFile).setTitle(IdeBundle.message("title.delete"))
+                  .appendMessage(IdeBundle.message("prompt.delete.it.anyway")).askYesNo();
                 if (_result != Messages.YES) continue;
 
                 boolean success = clearReadOnlyFlag(virtualFile, project);
@@ -277,6 +295,7 @@ public class DeleteHandler {
       }
     }, RefactoringBundle.message("safe.delete.command", RefactoringUIUtil.calculatePsiElementDescriptionList(elements)), null);
   }
+
 
   private static boolean clearReadOnlyFlag(final VirtualFile virtualFile, final Project project) {
     final boolean[] success = new boolean[1];
